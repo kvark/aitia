@@ -1,0 +1,20 @@
+title: Dreamer
+cluster: world-models
+year: 2019
+summary: >
+  Learns the latent dynamics and then optimises the policy by
+  backpropagating through imagined rollouts inside it, never touching the
+  environment during that step.
+refs:
+  - title: "Dream to Control: Learning Behaviors by Latent Imagination"
+    authors: Hafner, Lillicrap, Ba, Norouzi
+    year: 2019
+    url: https://arxiv.org/abs/1912.01603
+  - title: Mastering Diverse Domains through World Models
+    authors: Hafner, Pasukonis, Ba, Lillicrap
+    year: 2023
+    url: https://arxiv.org/abs/2301.04104
+edges:
+  - rel: extends
+    to: world-model
+    why: trains the policy inside the model, not the environment

@@ -1,0 +1,15 @@
+title: DINOv2
+cluster: representation
+year: 2023
+summary: >
+  Scales that recipe on a curated corpus into features good enough to use
+  frozen, with no fine-tuning, across depth, segmentation and retrieval.
+refs:
+  - title: "DINOv2: Learning Robust Visual Features without Supervision"
+    authors: Oquab et al.
+    year: 2023
+    url: https://arxiv.org/abs/2304.07193
+edges:
+  - rel: extends
+    to: dino
+    why: curated data and scale turn it into general features

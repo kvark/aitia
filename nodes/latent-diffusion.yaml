@@ -17,3 +17,6 @@ edges:
   - rel: requires
     to: variational-autoencoder
     why: the latent space it works in comes from one
+  - rel: requires
+    to: clip
+    why: the text conditioning comes from an image-text encoder

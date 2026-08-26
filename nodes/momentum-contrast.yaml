@@ -1,0 +1,17 @@
+title: Momentum Contrast
+cluster: representation
+year: 2019
+aka: [MoCo]
+summary: >
+  Keeps a queue of embeddings from previous batches, encoded by a slowly
+  moving copy of the network, so the pool of negatives is decoupled from
+  the batch size.
+refs:
+  - title: Momentum Contrast for Unsupervised Visual Representation Learning
+    authors: He, Fan, Wu, Xie, Girshick
+    year: 2019
+    url: https://arxiv.org/abs/1911.05722
+edges:
+  - rel: corrects
+    to: contrastive-learning
+    why: negatives need a batch bigger than memory allows

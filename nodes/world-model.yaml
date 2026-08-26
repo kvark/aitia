@@ -1,0 +1,19 @@
+title: World Model
+cluster: world-models
+year: 2018
+summary: >
+  Compresses observations into a latent with an autoencoder and learns a
+  recurrent model of how that latent evolves. A controller can then be
+  trained entirely inside it.
+refs:
+  - title: World Models
+    authors: Ha, Schmidhuber
+    year: 2018
+    url: https://arxiv.org/abs/1803.10122
+edges:
+  - rel: specializes
+    to: model-based-rl
+    why: the learned model is a latent-space simulator
+  - rel: requires
+    to: variational-autoencoder
+    why: the latent its dynamics run in comes from one

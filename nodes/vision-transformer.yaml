@@ -1,0 +1,18 @@
+title: Vision Transformer
+cluster: representation
+year: 2020
+aka: [ViT]
+summary: >
+  Cuts an image into fixed patches, embeds each as a token and runs a
+  plain transformer. Discards the convolutional priors entirely, and beats
+  them once the data is large enough to replace them.
+wikipedia: https://en.wikipedia.org/wiki/Vision_transformer
+refs:
+  - title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+    authors: Dosovitskiy et al.
+    year: 2020
+    url: https://arxiv.org/abs/2010.11929
+edges:
+  - rel: specializes
+    to: transformer
+    why: an image becomes a sequence of patch embeddings

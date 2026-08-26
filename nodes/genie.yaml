@@ -1,0 +1,19 @@
+title: Genie
+cluster: world-models
+year: 2024
+summary: >
+  Trains on unlabelled internet video and infers a latent action space,
+  producing a model that can be driven frame by frame. A playable
+  environment learned from footage of environments.
+refs:
+  - title: "Genie: Generative Interactive Environments"
+    authors: Bruce et al.
+    year: 2024
+    url: https://arxiv.org/abs/2402.15391
+edges:
+  - rel: extends
+    to: world-model
+    why: infers latent actions from video, so none need labelling
+  - rel: requires
+    to: v-jepa
+    why: the dynamics are learned over video representations

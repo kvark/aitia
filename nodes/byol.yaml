@@ -1,0 +1,17 @@
+title: BYOL
+cluster: representation
+year: 2020
+aka: [Bootstrap Your Own Latent]
+summary: >
+  An online network predicts the output of a slowly updated target copy of
+  itself, with no negatives at all. Should collapse to a constant and does
+  not, which took the field some time to explain.
+refs:
+  - title: "Bootstrap your own latent: A new approach to self-supervised Learning"
+    authors: Grill et al.
+    year: 2020
+    url: https://arxiv.org/abs/2006.07733
+edges:
+  - rel: corrects
+    to: contrastive-learning
+    why: negative pairs turn out not to be necessary

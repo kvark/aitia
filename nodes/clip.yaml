@@ -1,0 +1,17 @@
+title: CLIP
+cluster: representation
+year: 2021
+summary: >
+  Trains an image encoder and a text encoder so that a picture and its
+  caption land together. Gives a shared space where a class can be named
+  rather than trained.
+wikipedia: https://en.wikipedia.org/wiki/Contrastive_Language%E2%80%93Image_Pre-training
+refs:
+  - title: Learning Transferable Visual Models From Natural Language Supervision
+    authors: Radford et al.
+    year: 2021
+    url: https://arxiv.org/abs/2103.00020
+edges:
+  - rel: specializes
+    to: contrastive-learning
+    why: the positive pair is an image and its own caption

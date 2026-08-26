@@ -115,3 +115,13 @@
   domain: ai
   title: Distributed Training
   blurb: Splitting a model and its optimizer state across devices once neither fits on one.
+
+- id: representation
+  domain: ai
+  title: Representation Learning
+  blurb: Learning what an image or a signal means without anyone labelling it.
+
+- id: world-models
+  domain: ai
+  title: World Models
+  blurb: Learning the dynamics of an environment so a policy can be trained inside the model.

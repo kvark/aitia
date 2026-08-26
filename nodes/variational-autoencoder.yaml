@@ -16,3 +16,6 @@ edges:
   - rel: requires
     to: monte-carlo-integration
     why: the bound is estimated by sampling the latent
+  - rel: specializes
+    to: autoencoder
+    why: adds a probabilistic latent and a likelihood bound

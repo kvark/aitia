@@ -1,0 +1,13 @@
+title: Monte Carlo Tree Search
+cluster: world-models
+year: 2006
+aka: [MCTS]
+summary: >
+  Grows a search tree unevenly, spending rollouts where the value estimate
+  is most uncertain. Needs a simulator it can query, which is exactly what
+  most real problems lack.
+wikipedia: https://en.wikipedia.org/wiki/Monte_Carlo_tree_search
+edges:
+  - rel: requires
+    to: markov-decision-process
+    why: it searches the tree those transitions define

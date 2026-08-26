@@ -1,0 +1,23 @@
+title: Masked Autoencoder
+cluster: representation
+year: 2021
+aka: [MAE]
+summary: >
+  Hides most of the patches, encodes only the visible ones and
+  reconstructs the rest with a light decoder. The high mask ratio is what
+  makes it both a hard task and a cheap one.
+refs:
+  - title: Masked Autoencoders Are Scalable Vision Learners
+    authors: He, Chen, Xie, Li, Dollar, Girshick
+    year: 2021
+    url: https://arxiv.org/abs/2111.06377
+edges:
+  - rel: specializes
+    to: autoencoder
+    why: reconstructs patches hidden from the encoder
+  - rel: extends
+    to: bert
+    why: masked prediction moved from tokens to image patches
+  - rel: requires
+    to: vision-transformer
+    why: the encoder can skip the masked patches entirely
