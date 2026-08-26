@@ -1,0 +1,16 @@
+title: V-JEPA
+cluster: representation
+year: 2024
+summary: >
+  Extends the same idea to video, predicting the features of masked
+  spacetime regions. Learns motion and object permanence from unlabelled
+  footage alone.
+refs:
+  - title: Revisiting Feature Prediction for Learning Visual Representations from Video
+    authors: Bardes et al.
+    year: 2024
+    url: https://arxiv.org/abs/2404.08471
+edges:
+  - rel: extends
+    to: jepa
+    why: predicts masked spacetime regions across video frames

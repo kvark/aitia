@@ -1,0 +1,7 @@
+title: Autoencoder
+cluster: representation
+summary: >
+  Compresses input through a bottleneck and reconstructs it. The
+  bottleneck is the whole mechanism: whatever survives it is what the data
+  could not do without.
+wikipedia: https://en.wikipedia.org/wiki/Autoencoder

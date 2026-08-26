@@ -1,0 +1,17 @@
+title: JEPA
+cluster: representation
+year: 2023
+aka: [Joint-Embedding Predictive Architecture, I-JEPA]
+summary: >
+  Predicts the representation of a masked region rather than its pixels.
+  The argument is that pixel reconstruction forces the model to model
+  detail that is genuinely unpredictable and carries no meaning.
+refs:
+  - title: Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture
+    authors: Assran et al.
+    year: 2023
+    url: https://arxiv.org/abs/2301.08243
+edges:
+  - rel: corrects
+    to: masked-autoencoder
+    why: pixel targets spend capacity on unpredictable detail

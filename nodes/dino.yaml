@@ -1,0 +1,19 @@
+title: DINO
+cluster: representation
+year: 2021
+summary: >
+  Self-distillation without labels: a student matches a momentum teacher
+  across views, held away from collapse by centring and sharpening. Its
+  attention maps segment objects nobody labelled.
+refs:
+  - title: Emerging Properties in Self-Supervised Vision Transformers
+    authors: Caron et al.
+    year: 2021
+    url: https://arxiv.org/abs/2104.14294
+edges:
+  - rel: extends
+    to: byol
+    why: centring and sharpening in place of a prediction head
+  - rel: requires
+    to: vision-transformer
+    why: the emergent segmentation lives in its attention maps

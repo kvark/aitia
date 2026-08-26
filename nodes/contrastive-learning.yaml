@@ -1,0 +1,14 @@
+title: Contrastive Learning
+cluster: representation
+year: 2020
+aka: [SimCLR]
+summary: >
+  Pulls two augmented views of one image together in embedding space and
+  pushes other images apart. Learns without labels, and the augmentations
+  quietly decide what the features will ignore.
+wikipedia: https://en.wikipedia.org/wiki/Self-supervised_learning
+refs:
+  - title: A Simple Framework for Contrastive Learning of Visual Representations
+    authors: Chen, Kornblith, Norouzi, Hinton
+    year: 2020
+    url: https://arxiv.org/abs/2002.05709

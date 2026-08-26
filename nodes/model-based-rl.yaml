@@ -1,0 +1,15 @@
+title: Model-Based RL
+cluster: world-models
+summary: >
+  Learns the environment's dynamics and plans against them, rather than
+  caching what actions were worth. Buys sample efficiency and pays for it
+  with whatever the model gets wrong.
+refs:
+  - title: "Dream to Control: Learning Behaviors by Latent Imagination"
+    authors: Hafner, Lillicrap, Ba, Norouzi
+    year: 2019
+    url: https://arxiv.org/abs/1912.01603
+edges:
+  - rel: alternative-to
+    to: q-learning
+    why: plans with learned dynamics instead of caching values

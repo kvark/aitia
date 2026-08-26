@@ -1,0 +1,19 @@
+title: MuZero
+cluster: world-models
+year: 2019
+summary: >
+  Learns a model that predicts only reward, value and policy, never
+  observations, and plans with it. Reaches AlphaZero's play without being
+  told the rules of the game.
+refs:
+  - title: Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model
+    authors: Schrittwieser et al.
+    year: 2019
+    url: https://arxiv.org/abs/1911.08265
+edges:
+  - rel: corrects
+    to: world-model
+    why: predicting observations is capacity planning cannot use
+  - rel: requires
+    to: monte-carlo-tree-search
+    why: it plans by searching inside the learned model
