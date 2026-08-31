@@ -27,6 +27,22 @@ RELATIONS = {
     "validates": ("is a test for", True),
 }
 
+# Prominence, used only by diagrams big enough to need a reading order.
+#
+# Past a couple of dozen nodes every box carries the same weight and there is
+# nowhere for the eye to start. Ranking by how connected a node is gives that
+# start back: the junctions you navigate by come forward, the twigs recede.
+# Nothing is removed — the site lifts the ranking on hover and on zoom — so
+# this is a reading order, not a filter.
+#
+# In-degree alone would be the wrong measure. Edges are declared on the
+# subject node, so the newest node in any area has an in-degree of zero by
+# construction, and ranking on it would fade exactly the frontier of the
+# graph. Out-degree counts too, at half weight: being built on is a stronger
+# claim than building on something, but it is not the only one.
+RANK_CUTS = (2, 6)      # weighted degree: <= 2 recedes, > 6 is a junction
+RANK_MIN_DRAWN = 12     # below this a diagram is not crowded; rank nothing
+
 REQUIRED_FIELDS = ("title", "cluster", "summary")
 KNOWN_FIELDS = REQUIRED_FIELDS + ("year", "aka", "tags", "wikipedia", "refs", "edges")
 
@@ -150,6 +166,36 @@ def incoming(nodes):
     return result
 
 
+def is_crowded(nodes, members):
+    """Whether a diagram of `members` is dense enough to want a reading order.
+
+    Counts what will actually be drawn: the members plus the out-of-cluster
+    nodes they point at.
+    """
+    drawn = set(members)
+    for nid in members:
+        for edge in nodes[nid].get("edges") or []:
+            if edge.get("to") in nodes:
+                drawn.add(edge["to"])
+    return len(drawn) >= RANK_MIN_DRAWN
+
+
+def prominence(nodes):
+    """nid -> 0 (peripheral), 1 (ordinary), 2 (junction).
+
+    Scored over the whole graph rather than per diagram, so a node carries the
+    same weight on every page it appears on.
+    """
+    back = incoming(nodes)
+    tiers = {}
+    for nid, node in nodes.items():
+        out = sum(1 for e in node.get("edges") or [] if e.get("to") in nodes)
+        score = 2 * len(back[nid]) + out
+        low, high = RANK_CUTS
+        tiers[nid] = 0 if score <= low else 2 if score > high else 1
+    return tiers
+
+
 def members_of(nodes, cluster_id):
     return sorted(nid for nid, n in nodes.items() if n.get("cluster") == cluster_id)
 
@@ -179,7 +225,7 @@ def dot_label(text, width):
     return "\\n".join(textwrap.wrap(body, width)) or body
 
 
-def dot_source(nodes, members, url=None, focus=None, rankdir="LR"):
+def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False):
     """Graphviz DOT for `members` plus any nodes they link to.
 
     No colours are emitted. Every node and edge carries a class instead, so the
@@ -189,6 +235,10 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR"):
     anchor, so clicking a node works with scripting disabled.
     `focus` keeps only edges touching that node, so a neighbourhood view does
     not also draw every unrelated edge its neighbours happen to have.
+    `ranked` adds a prominence class to each node and edge. Whether a diagram
+    wants one is the caller's call — see is_crowded. A focused neighbourhood
+    never asks for it: everything drawn there is a neighbour of the node being
+    read, so nothing in it is peripheral.
     """
     members = set(members)
     edges, external = [], set()
@@ -203,6 +253,11 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR"):
             if to not in members:
                 external.add(to)
             edges.append((nid, edge, to))
+
+    # An edge is only as prominent as its fainter end, so a peripheral node
+    # takes the reason written on its edge down with it. That is most of the
+    # gain: edge labels are about half the ink in a crowded diagram.
+    tiers = prominence(nodes) if ranked else None
 
     out = [
         "digraph G {",
@@ -220,6 +275,8 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR"):
             classes.append("ext")
         if nid == focus:
             classes.append("focus")
+        if tiers:
+            classes.append(f"p{tiers[nid]}")
         attrs = [
             f'label="{dot_label(nodes[nid]["title"], 21)}"',
             f'class="{" ".join(classes)}"',
@@ -230,7 +287,8 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR"):
         out.append(f'  "{nid}" [{", ".join(attrs)}];')
 
     for src, edge, dst in edges:
-        attrs = [f'class="e e-{edge["rel"]}"']
+        rank = f" p{min(tiers[src], tiers[dst])}" if tiers else ""
+        attrs = [f'class="e e-{edge["rel"]}{rank}"']
         if edge.get("why"):
             attrs.append(f'label="{dot_label(edge["why"], 26)}"')
         out.append(f'  "{src}" -> "{dst}" [{", ".join(attrs)}];')

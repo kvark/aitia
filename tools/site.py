@@ -27,6 +27,7 @@ from graph import (
     clean,
     dot_source,
     incoming,
+    is_crowded,
     load_all,
     members_of,
 )
@@ -156,19 +157,45 @@ kbd { font: .72rem ui-monospace, monospace; border: 1px solid var(--line);
 /* ---- the graph itself ---- */
 .diagram svg { font-family: Helvetica, Arial, sans-serif; }
 .diagram svg .graph > polygon { fill: none; stroke: none; }
-.diagram svg .node > path, .diagram svg .node > polygon {
+/* Descendant, not child: a node that carries a URL — which is every node —
+   wraps its box in the anchor graphviz emits, so `.node > path` matched
+   nothing and the boxes kept graphviz's own black stroke and empty fill. */
+.diagram svg .node path, .diagram svg .node polygon {
   fill: var(--node-fill); stroke: var(--node-line); }
 .diagram svg .node text { fill: var(--fg); }
-.diagram svg .node a:hover > path { stroke: var(--accent); stroke-width: 1.8; }
-.diagram svg .node.ext > path { stroke-dasharray: 5 3; fill: none; }
-.diagram svg .node.focus > path { stroke: var(--accent); stroke-width: 2.2; }
+.diagram svg .node a:hover path { stroke: var(--accent); stroke-width: 1.8; }
+.diagram svg .node.ext path { stroke-dasharray: 5 3; fill: none; }
+.diagram svg .node.focus path { stroke: var(--accent); stroke-width: 2.2; }
 .diagram svg .edge > path { stroke: var(--edge-line); fill: none; }
 .diagram svg .edge > polygon { fill: var(--edge-line); stroke: var(--edge-line); }
 .diagram svg .edge text { fill: var(--muted); }
 .diagram svg a { text-decoration: none; }
 .diagram svg .node, .diagram svg .edge { transition: opacity .14s ease; }
+
+/* ---- prominence, in diagrams crowded enough to need a reading order ----
+   The tier rules below deliberately carry no element selector, so every state
+   rule that does — search, and the hover class the script sets — outranks them
+   without a specificity fight. Ranking is a reading order and never a filter:
+   it lifts when you hover a node, and it lifts wholesale once the diagram is
+   drawn at its natural size or larger, which is also the point at which the
+   reason on an edge becomes readable. */
+/* A peripheral node fades by its box, not by its name: the outline is what
+   makes the crowding, while the name is what you are scanning for. */
+.ranked .node.p0 path { opacity: .32; }
+.ranked .node.p0 text { opacity: .58; }
+.ranked .edge.p0 { opacity: .26; }
+.ranked .edge.p1 { opacity: .78; }
+/* Junctions get a second channel rather than more opacity, which they have
+   already spent: a heavier border, the way the edge families use a dash. */
+.ranked .node.p2 path { stroke-width: 1.9; }
+.ranked.detail .node path, .ranked.detail .node text { opacity: 1; }
+.ranked.detail .edge { opacity: 1; }
+.ranked .node.lit path, .ranked .node.lit text { opacity: 1; }
+.ranked .edge.lit { opacity: 1; }
+
 .diagram svg .node.dim, .diagram svg .edge.dim { opacity: .12; }
-.diagram svg .node.hit > path { stroke: var(--accent); stroke-width: 2.4; }
+.diagram svg .node.hit, .diagram svg .node.hit path, .diagram svg .node.hit text { opacity: 1; }
+.diagram svg .node.hit path { stroke: var(--accent); stroke-width: 2.4; }
 .diagram svg .node.hit text { font-weight: bold; }
 
 .legend { list-style: none; padding: 0; margin: 0 0 .35rem; display: flex;
@@ -213,12 +240,25 @@ function setupFigure(fig) {
   box.classList.add('pz');
   fig.classList.add('ready');
 
-  function apply() { svg.setAttribute('viewBox', vb.join(' ')); }
+  var bw = 0;
+  function apply() {
+    svg.setAttribute('viewBox', vb.join(' '));
+    /* Ranking is there to give a crowded overview somewhere to start. Once
+       the drawing is at least at its natural size the reasons on the edges
+       are readable and the ranking has done its job, so drop it wholesale.
+       Measured against the cached width: reading it here would force a
+       layout on every pointermove of a drag. */
+    box.classList.toggle('detail', bw > 0 && bw / vb[2] >= 0.9);
+  }
   function fit() {
-    if (document.fullscreenElement === box) { box.style.height = '100vh'; return; }
-    var inner = box.clientWidth - 24;
-    var ideal = inner * home[3] / home[2] + 24;
-    box.style.height = Math.round(Math.max(150, Math.min(ideal, innerHeight * 0.86))) + 'px';
+    if (document.fullscreenElement === box) box.style.height = '100vh';
+    else {
+      var inner = box.clientWidth - 24;
+      var ideal = inner * home[3] / home[2] + 24;
+      box.style.height = Math.round(Math.max(150, Math.min(ideal, innerHeight * 0.86))) + 'px';
+    }
+    bw = box.clientWidth - 24;
+    apply();
   }
   function zoom(f, cx, cy) {
     var w = vb[2] * f;
@@ -299,6 +339,48 @@ function setupFigure(fig) {
   };
 }
 
+/* ---------- prominence ----------
+   The ranking must never cost you a node you were looking at, so hovering one
+   brings it, its edges and their far ends back to full weight. Endpoints come
+   from the <title> graphviz writes into every group ("a" and "a->b"), which is
+   the only place the SVG records what an edge connects. */
+function setupRank(box) {
+  if (!box || !box.classList.contains('ranked')) return;
+  var at = {}, adj = {};
+  box.querySelectorAll('g.node').forEach(function (g) {
+    var t = g.querySelector('title');
+    if (t) { at[t.textContent] = g; adj[t.textContent] = []; }
+  });
+  box.querySelectorAll('g.edge').forEach(function (g) {
+    var t = g.querySelector('title');
+    var ends = t ? t.textContent.split('->') : [];
+    if (ends.length !== 2) return;
+    if (adj[ends[0]]) adj[ends[0]].push([g, ends[1]]);
+    if (adj[ends[1]]) adj[ends[1]].push([g, ends[0]]);
+  });
+
+  var lit = [];
+  function clear() {
+    lit.forEach(function (el) { el.classList.remove('lit'); });
+    lit = [];
+  }
+  function light(id) {
+    clear();
+    function add(el) { if (el) { el.classList.add('lit'); lit.push(el); } }
+    add(at[id]);
+    (adj[id] || []).forEach(function (pair) { add(pair[0]); add(at[pair[1]]); });
+  }
+  Object.keys(at).forEach(function (id) {
+    var g = at[id], a = g.querySelector('a');
+    g.addEventListener('mouseenter', function () { light(id); });
+    g.addEventListener('mouseleave', clear);
+    if (a) {
+      a.addEventListener('focus', function () { light(id); });
+      a.addEventListener('blur', clear);
+    }
+  });
+}
+
 /* ---------- search ---------- */
 var figures = [], q, list, sel = -1, shown = [];
 
@@ -350,6 +432,7 @@ function init() {
   document.querySelectorAll('.figure').forEach(function (fig) {
     var api = setupFigure(fig);
     if (api) figures.push({ fig: fig, api: api, found: [] });
+    setupRank(fig.querySelector('.diagram'));
   });
 
   q = document.getElementById('q');
@@ -452,14 +535,20 @@ def render_svg(dot_text):
     return svg[svg.index("<svg"):]
 
 
-def fig(svg, wide=False):
+def fig(svg, wide=False, ranked=False):
     cls = "figure wide" if wide else "figure"
+    box = "diagram ranked" if ranked else "diagram"
+    hint = "Drag to pan · scroll to zoom · click a node to open it"
+    if ranked:
+        # Otherwise the faint half of the diagram reads as broken rather than
+        # as ranked, which is worse than not ranking it at all.
+        hint += " · the least connected are faint until you hover or zoom in"
     # Controls sit above the box, not floating inside it, where they used to
     # cover whichever node the layout happened to put in the corner.
     return (
         f'<div class="{cls}">'
         '<div class="fig-head">'
-        '<span class="hint">Drag to pan · scroll to zoom · click a node to open it</span>'
+        f'<span class="hint">{hint}</span>'
         '<span class="found" data-found></span>'
         '<div class="tools">'
         '<button data-act="out" title="Zoom out">&minus;</button>'
@@ -467,7 +556,7 @@ def fig(svg, wide=False):
         '<button data-act="reset" title="Reset view">reset</button>'
         '<button data-act="full" title="Fullscreen">&#9974;</button>'
         "</div></div>"
-        f'<div class="diagram">{svg}</div></div>'
+        f'<div class="{box}">{svg}</div></div>'
     )
 
 
@@ -598,7 +687,9 @@ def render_cluster(cluster, nodes, domains, index):
     cid, title, blurb = cluster["id"], cluster["title"], cluster["blurb"]
     dom = next(d for d in domains if d["id"] == cluster["domain"])
     members = members_of(nodes, cid)
-    svg = render_svg(dot_source(nodes, members, url=lambda n: f"../n/{n}.html"))
+    ranked = is_crowded(nodes, members)
+    svg = render_svg(dot_source(
+        nodes, members, url=lambda n: f"../n/{n}.html", ranked=ranked))
     cards = "".join(
         f'<div class="card"><h4>{node_link(nid, nodes, 1)}</h4>'
         f'<p>{esc(clean(nodes[nid]["summary"], 150))}'
@@ -611,7 +702,7 @@ def render_cluster(cluster, nodes, domains, index):
         f"<h1>{esc(title)}</h1>"
         f'<p class="lede">{esc(blurb)}</p>'
         f"{legend()}"
-        f"{fig(svg, wide=True)}"
+        f"{fig(svg, wide=True, ranked=ranked)}"
         f'<h2>{len(members)} nodes</h2><div class="cards">{cards}</div>'
     )
     return page(title, body, 1, index)
