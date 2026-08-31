@@ -11,3 +11,6 @@ edges:
   - rel: requires
     to: markov-decision-process
     why: it searches the tree those transitions define
+  - rel: requires
+    to: upper-confidence-bound
+    why: every node of the tree is its own bandit problem

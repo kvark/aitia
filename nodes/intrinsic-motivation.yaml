@@ -1,0 +1,21 @@
+title: Intrinsic Motivation
+cluster: reinforcement
+year: 2017
+aka: [Curiosity, ICM, Random Network Distillation, RND]
+summary: >
+  Pay the agent for reaching states its own predictor gets wrong, so
+  novelty becomes a reward it can follow. What Montezuma's Revenge needed
+  and what undirected exploration was never going to supply.
+refs:
+  - title: Curiosity-driven Exploration by Self-supervised Prediction
+    authors: Pathak, Agrawal, Efros, Darrell
+    year: 2017
+    url: https://arxiv.org/abs/1705.05363
+  - title: Exploration by Random Network Distillation
+    authors: Burda, Edwards, Storkey, Klimov
+    year: 2018
+    url: https://arxiv.org/abs/1810.12894
+edges:
+  - rel: corrects
+    to: epsilon-greedy
+    why: random actions never chain into the long sequence a sparse reward needs

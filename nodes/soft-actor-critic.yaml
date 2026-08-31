@@ -1,0 +1,31 @@
+title: Soft Actor-Critic
+cluster: reinforcement
+year: 2018
+aka: [SAC]
+summary: >
+  Off-policy actor-critic on the maximum-entropy objective, with twin
+  critics and a temperature tuned automatically against a target entropy.
+  The default for continuous control: DDPG's sample efficiency without
+  DDPG's habit of collapsing when a hyperparameter moves.
+refs:
+  - title: "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor"
+    authors: Haarnoja, Zhou, Abbeel, Levine
+    year: 2018
+    url: https://arxiv.org/abs/1801.01290
+  - title: Soft Actor-Critic Algorithms and Applications
+    authors: Haarnoja et al.
+    year: 2018
+    url: https://arxiv.org/abs/1812.05905
+edges:
+  - rel: specializes
+    to: maximum-entropy-rl
+    why: the critic prices entropy alongside reward, so the actor stays stochastic
+  - rel: corrects
+    to: ddpg
+    why: a deterministic actor explores only as far as the noise someone tuned for it
+  - rel: alternative-to
+    to: ppo
+    why: off-policy, so a transition is reused for the rest of training instead of dropped after one batch
+  - rel: requires
+    to: experience-replay
+    why: its updates come from the buffer, not from the latest rollout

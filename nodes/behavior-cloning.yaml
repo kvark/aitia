@@ -1,0 +1,23 @@
+title: Behavior Cloning
+cluster: reinforcement
+year: 1988
+aka: [Behaviour cloning, Imitation learning]
+summary: >
+  Fit a policy to demonstrations with a supervised loss and skip the
+  reward entirely. Its own small errors then take it off the states it was
+  shown, where nothing in the data says what to do. That compounding
+  drift is the failure DAgger names and patches.
+wikipedia: https://en.wikipedia.org/wiki/Imitation_learning
+refs:
+  - title: "ALVINN: An Autonomous Land Vehicle in a Neural Network"
+    authors: Pomerleau
+    year: 1988
+    url: https://proceedings.neurips.cc/paper/1988/hash/812b4ba287f5ee0bc9d43bbf5bbe87fb-Abstract.html
+  - title: A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning
+    authors: Ross, Gordon, Bagnell
+    year: 2011
+    url: https://arxiv.org/abs/1011.0686
+edges:
+  - rel: alternative-to
+    to: policy-gradient
+    why: demonstrations instead of a reward, so nothing has to be explored

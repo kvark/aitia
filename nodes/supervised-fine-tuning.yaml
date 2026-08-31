@@ -16,3 +16,6 @@ edges:
   - rel: extends
     to: autoregressive-language-model
     why: trains on demonstrations of the behaviour wanted
+  - rel: specializes
+    to: behavior-cloning
+    why: the demonstrations are text and the actions tokens, but the loss is the same

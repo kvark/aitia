@@ -1,0 +1,21 @@
+title: Twin Delayed DDPG
+cluster: reinforcement
+year: 2018
+aka: [TD3]
+summary: >
+  Take the smaller of two critics, update the actor every other step, and
+  smooth the target over nearby actions. Three small changes aimed at one
+  failure: the actor's gradient ascent finds whatever the critic overrates
+  and goes there.
+refs:
+  - title: Addressing Function Approximation Error in Actor-Critic Methods
+    authors: Fujimoto, van Hoof, Meger
+    year: 2018
+    url: https://arxiv.org/abs/1802.09477
+edges:
+  - rel: corrects
+    to: ddpg
+    why: the actor is trained to maximise exactly the critic's own errors
+  - rel: extends
+    to: double-dqn
+    why: carries the two-estimator fix into continuous actions, as a min over the pair

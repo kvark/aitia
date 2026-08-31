@@ -1,0 +1,20 @@
+title: Upper Confidence Bound
+cluster: reinforcement
+year: 2002
+aka: [UCB, UCB1]
+summary: >
+  Pick the arm with the highest optimistic estimate: its mean plus a term
+  that grows the less it has been tried. Exploration follows from
+  uncertainty rather than from a coin flip, and the regret grows with the
+  logarithm of time where a fixed exploration rate makes it linear.
+refs:
+  - title: Finite-time Analysis of the Multiarmed Bandit Problem
+    authors: Auer, Cesa-Bianchi, Fischer
+    year: 2002
+    url: https://link.springer.com/article/10.1023/A:1013689704352
+edges:
+  - rel: corrects
+    to: epsilon-greedy
+    why: uniform exploration keeps re-trying arms already measured as bad
+  - rel: part-of
+    to: multi-armed-bandit

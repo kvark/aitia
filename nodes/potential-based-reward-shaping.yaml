@@ -1,0 +1,17 @@
+title: Potential-Based Reward Shaping
+cluster: reinforcement
+year: 1999
+summary: >
+  Add the difference of a potential function to the reward, and the
+  optimal policy provably does not move. The result that turned reward
+  engineering from guesswork into a statement about which extra signal is
+  safe to give.
+refs:
+  - title: "Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping"
+    authors: Ng, Harada, Russell
+    year: 1999
+    url: https://ai.stanford.edu/~ang/papers/shaping-icml99.pdf
+edges:
+  - rel: extends
+    to: markov-decision-process
+    why: dense guidance can be added to a sparse reward without moving its optimum

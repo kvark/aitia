@@ -1,0 +1,20 @@
+title: Prioritized Experience Replay
+cluster: reinforcement
+year: 2015
+aka: [PER]
+summary: >
+  Draw a transition in proportion to the size of its last TD error, so the
+  buffer keeps returning the surprising ones and stops returning the
+  solved ones.
+refs:
+  - title: Prioritized Experience Replay
+    authors: Schaul, Quan, Antonoglou, Silver
+    year: 2015
+    url: https://arxiv.org/abs/1511.05952
+edges:
+  - rel: corrects
+    to: experience-replay
+    why: uniform sampling spends most updates on transitions with no error left
+  - rel: requires
+    to: importance-sampling
+    why: drawing by error skews the expectation, and the weight puts it back

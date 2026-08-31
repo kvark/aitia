@@ -1,0 +1,20 @@
+title: Epsilon-Greedy
+cluster: reinforcement
+aka: ["ε-greedy"]
+summary: >
+  Take the best action known, except on an ε fraction of steps where the
+  action is uniformly random. The cheapest exploration that still visits
+  every action infinitely often, and the baseline anything cleverer has to
+  beat.
+wikipedia: https://en.wikipedia.org/wiki/Multi-armed_bandit
+refs:
+  - title: "Reinforcement Learning: An Introduction"
+    authors: Sutton, Barto
+    year: 2018
+    url: http://incompleteideas.net/book/the-book-2nd.html
+edges:
+  - rel: corrects
+    to: q-learning
+    why: acting greedily never revisits an action its first sample underrated
+  - rel: part-of
+    to: multi-armed-bandit

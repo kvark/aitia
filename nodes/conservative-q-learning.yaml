@@ -1,0 +1,17 @@
+title: Conservative Q-Learning
+cluster: reinforcement
+year: 2020
+aka: [CQL]
+summary: >
+  Adds a term that pushes down the value of actions the dataset does not
+  contain, so what comes out is a lower bound on the policy's true value
+  rather than an optimistic guess.
+refs:
+  - title: Conservative Q-Learning for Offline Reinforcement Learning
+    authors: Kumar, Zhou, Tucker, Levine
+    year: 2020
+    url: https://arxiv.org/abs/2006.04779
+edges:
+  - rel: corrects
+    to: offline-rl
+    why: the critic overrates actions never seen, and the policy walks straight to them

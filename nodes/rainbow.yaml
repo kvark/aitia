@@ -1,0 +1,23 @@
+title: Rainbow
+cluster: reinforcement
+year: 2017
+summary: >
+  Six DQN improvements in one agent: double, dueling, prioritized replay,
+  multi-step returns, distributional values and noisy exploration, with an
+  ablation for each. The result is mostly the finding that they address
+  different problems and therefore add up.
+refs:
+  - title: "Rainbow: Combining Improvements in Deep Reinforcement Learning"
+    authors: Hessel et al.
+    year: 2017
+    url: https://arxiv.org/abs/1710.02298
+edges:
+  - rel: extends
+    to: deep-q-network
+    why: every fix had been measured alone, against the same unimproved baseline
+  - rel: requires
+    to: prioritized-experience-replay
+    why: no single ablation costs more than removing it
+  - rel: requires
+    to: distributional-rl
+    why: it pays off only late in training, where shorter papers stopped looking
