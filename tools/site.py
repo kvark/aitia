@@ -193,11 +193,24 @@ kbd { font: .72rem ui-monospace, monospace; border: 1px solid var(--line);
 .ranked .node.lit path, .ranked .node.lit text { opacity: 1; }
 .ranked .edge.lit { opacity: 1; }
 
+/* The reason on an edge, put back one node at a time. Drawn by the script at
+   a constant size on screen, so it reads the same however far you have
+   zoomed, and over a plate of the page's own background rather than over
+   whatever the layout happens to run underneath. */
+.diagram svg .why rect { fill: var(--card); stroke: var(--line); }
+.diagram svg .why text { fill: var(--fg); }
+/* The leader back to the edge: its colour comes from the relation class the
+   group carries, so it only needs quietening. */
+.diagram svg .why > path { opacity: .55; }
+
 .diagram svg .node.dim, .diagram svg .edge.dim { opacity: .12; }
 .diagram svg .node.hit, .diagram svg .node.hit path, .diagram svg .node.hit text { opacity: 1; }
 .diagram svg .node.hit path { stroke: var(--accent); stroke-width: 2.4; }
 .diagram svg .node.hit text { font-weight: bold; }
 
+.reasons { margin: -1rem 0 2rem; }
+.reasons summary { color: var(--muted); font-size: .85rem; cursor: pointer; }
+.reasons ul { margin-top: .75rem; }
 .legend { list-style: none; padding: 0; margin: 0 0 .35rem; display: flex;
           flex-wrap: wrap; gap: .3rem 1.6rem; font-size: .82rem; color: var(--muted); }
 .legend li { display: flex; align-items: baseline; gap: .5rem; }
@@ -224,7 +237,7 @@ footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line);
 
 SCRIPT = r"""
 (function () {
-var IDX = __INDEX__, UP = "__UP__";
+var IDX = __INDEX__, UP = "__UP__", WHY = __WHY__;
 
 /* ---------- pan & zoom ---------- */
 function setupFigure(fig) {
@@ -320,6 +333,9 @@ function setupFigure(fig) {
 
   return {
     svg: svg,
+    /* Rendered pixels per user unit, so anything drawn into the SVG at
+       runtime can be sized in screen terms. */
+    scale: function () { return bw && vb[2] ? bw / vb[2] : 1; },
     frame: function (els) {
       if (!els.length) return;
       var r = svg.getBoundingClientRect();
@@ -339,12 +355,25 @@ function setupFigure(fig) {
   };
 }
 
-/* ---------- prominence ----------
-   The ranking must never cost you a node you were looking at, so hovering one
-   brings it, its edges and their far ends back to full weight. Endpoints come
-   from the <title> graphviz writes into every group ("a" and "a->b"), which is
-   the only place the SVG records what an edge connects. */
-function setupRank(box) {
+/* ---------- prominence, and the reasons ----------
+   A crowded cluster is laid out without its edge labels — they are about half
+   the area, and unreadable at that size anyway — so hovering a node is what
+   puts them back: it brings the node, its edges and their far ends to full
+   weight and writes the reason along each of those edges. Endpoints come from
+   the <title> graphviz writes into every group ("a" and "a->b"), which is the
+   only place the SVG records what an edge connects. */
+function wrap(text, width) {
+  var words = text.split(/\s+/), lines = [], line = '';
+  words.forEach(function (w) {
+    if (!line) line = w;
+    else if ((line + ' ' + w).length <= width) line += ' ' + w;
+    else { lines.push(line); line = w; }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function setupRank(box, api) {
   if (!box || !box.classList.contains('ranked')) return;
   var at = {}, adj = {};
   box.querySelectorAll('g.node').forEach(function (g) {
@@ -355,20 +384,162 @@ function setupRank(box) {
     var t = g.querySelector('title');
     var ends = t ? t.textContent.split('->') : [];
     if (ends.length !== 2) return;
-    if (adj[ends[0]]) adj[ends[0]].push([g, ends[1]]);
-    if (adj[ends[1]]) adj[ends[1]].push([g, ends[0]]);
+    /* Which end you are hovering decides which way its label is pushed. */
+    if (adj[ends[0]]) adj[ends[0]].push([g, ends[1], 1]);
+    if (adj[ends[1]]) adj[ends[1]].push([g, ends[0], 0]);
   });
 
-  var lit = [];
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var layer = box.querySelector('svg .graph'), lit = [], drawn = [];
+
+  function el(name, attrs) {
+    var node = document.createElementNS(SVGNS, name);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    return node;
+  }
+
+  /* Where a label can go. Graphviz reserved no room for these — that is the
+     whole point of dropping them from the layout — so each one walks its own
+     edge looking for a spot that clears the node boxes and the labels already
+     placed, nudging up or down at each stop before moving on. Sliding along
+     the edge keeps a label attached to the edge it belongs to, which
+     offsetting in some arbitrary direction would not.
+
+     It starts two thirds of the way towards the far end rather than at the
+     midpoint. Every edge being labelled meets at the node under the pointer,
+     so the middle is the one place they all compete for, while the far ends
+     are as spread out as the layout could make them. */
+  var STOPS = [0.66, 0.74, 0.58, 0.82, 0.5, 0.9, 0.42, 0.34, 0.26];
+  /* Every placement, cheapest first: a point along the edge, then a step off
+     it in either axis, measured in plate sizes. Sliding along the edge is
+     nearly free, since the label is still lying on the line it describes;
+     stepping off costs, because that is what has to be paid back with a
+     leader line. */
+  var SPOTS = [];
+  STOPS.forEach(function (stop, i) {
+    for (var dy = -6; dy <= 6; dy += 0.6) {
+      [0, -1, 1].forEach(function (dx) {
+        SPOTS.push({ stop: stop, dy: dy, dx: dx,
+                     cost: i + Math.abs(dy) * 2.5 + Math.abs(dx) * 2 });
+      });
+    }
+  });
+  SPOTS.sort(function (a, b) { return a.cost - b.cost; });
+  var boxes = null, bounds = null, taken = [];
+
+  function obstacles() {
+    if (!boxes) {
+      boxes = [];
+      box.querySelectorAll('g.node').forEach(function (g) {
+        boxes.push(g.getBBox());
+      });
+      /* The viewBox is the drawing's own extent, so a label placed past it
+         is simply cut off. Taken while the group holds nothing but the
+         graph — see light(), which measures before it draws. */
+      bounds = layer.getBBox();
+    }
+    return boxes.concat(taken);
+  }
+  function inside(r) {
+    return r.x >= bounds.x && r.y >= bounds.y &&
+           r.x + r.width <= bounds.x + bounds.width &&
+           r.y + r.height <= bounds.y + bounds.height;
+  }
+  function clashes(a, b) {
+    return a.x < b.x + b.width && b.x < a.x + a.width &&
+           a.y < b.y + b.height && b.y < a.y + a.height;
+  }
+
+  /* Sized against the current zoom, so a reason reads the same whether the
+     cluster is fitted to the box or filling the screen. */
+  function label(edge, why, forward) {
+    var path = edge.querySelector('path');
+    if (!path || !path.getPointAtLength) return;
+    var size = 12 / (api ? api.scale() : 1), lines = wrap(why, 22);
+    /* Carrying the edge's own relation class means the leader line below is
+       painted by the same stylesheet rule as the edge it belongs to, dash
+       pattern and all. */
+    var rel = (edge.getAttribute('class') || '').split(/\s+/).filter(
+      function (c) { return c.indexOf('e-') === 0; })[0];
+    var g = el('g', { class: 'why' + (rel ? ' e ' + rel : '') });
+    var text = el('text', {
+      'text-anchor': 'middle', 'font-size': size,
+      y: size * 0.35 - (lines.length - 1) * size * 0.575,
+    });
+    lines.forEach(function (line, i) {
+      var span = el('tspan', { x: 0, dy: i ? size * 1.15 : 0 });
+      span.textContent = line;
+      text.appendChild(span);
+    });
+    g.appendChild(text);
+    layer.appendChild(g);
+
+    var b = text.getBBox(), pad = size * 0.35, len = path.getTotalLength();
+    function plate(p) {
+      return { x: p.x + b.x - pad, y: p.y + b.y - pad,
+               width: b.width + 2 * pad, height: b.height + 2 * pad };
+    }
+    var start = path.getPointAtLength(len * (forward ? STOPS[0] : 1 - STOPS[0]));
+    var spot = start, anchor = start, rect = plate(start);
+    for (var i = 0; i < SPOTS.length; i++) {
+      var s = SPOTS[i];
+      var at = path.getPointAtLength(len * (forward ? s.stop : 1 - s.stop));
+      var p = { x: at.x + s.dx * (b.width / 2 + pad * 3),
+                y: at.y + s.dy * (b.height + 2 * pad) };
+      var r = plate(p);
+      if (obstacles().every(function (o) { return !clashes(r, o); }) &&
+          inside(r)) {
+        spot = p; anchor = at; rect = r; break;
+      }
+    }
+    /* Nowhere clear and inside the drawing: take the cheapest spot anyway,
+       but slide it back within the edges. A label that overlaps something is
+       readable; one that is half outside the viewBox is not there at all. */
+    var over;
+    if ((over = bounds.x - rect.x) > 0) { spot.x += over; rect.x += over; }
+    if ((over = rect.x + rect.width - bounds.x - bounds.width) > 0) {
+      spot.x -= over; rect.x -= over;
+    }
+    if ((over = bounds.y - rect.y) > 0) { spot.y += over; rect.y += over; }
+    if ((over = rect.y + rect.height - bounds.y - bounds.height) > 0) {
+      spot.y -= over; rect.y -= over;
+    }
+
+    g.setAttribute('transform', 'translate(' + spot.x + ',' + spot.y + ')');
+    g.insertBefore(el('rect', {
+      x: b.x - pad, y: b.y - pad, rx: pad,
+      width: b.width + 2 * pad, height: b.height + 2 * pad,
+    }), text);
+    /* A label pushed clear of the traffic has to say which edge it came
+       from. The leader runs to the plate's centre and the plate is painted
+       over it, so what shows is the part outside. */
+    if (Math.hypot(spot.x - anchor.x, spot.y - anchor.y) > b.height / 2) {
+      g.insertBefore(el('path', {
+        d: 'M' + (anchor.x - spot.x) + ',' + (anchor.y - spot.y) + 'L0,0',
+        fill: 'none',
+      }), g.firstChild);
+    }
+    taken.push(rect);
+    drawn.push(g);
+  }
+
   function clear() {
-    lit.forEach(function (el) { el.classList.remove('lit'); });
-    lit = [];
+    lit.forEach(function (e) { e.classList.remove('lit'); });
+    drawn.forEach(function (g) { g.remove(); });
+    lit = []; drawn = []; taken = [];
   }
   function light(id) {
     clear();
-    function add(el) { if (el) { el.classList.add('lit'); lit.push(el); } }
+    /* Measure the drawing before adding anything to it: the first label is
+       appended to the same group whose extent is being taken. */
+    obstacles();
+    function add(e) { if (e) { e.classList.add('lit'); lit.push(e); } }
     add(at[id]);
-    (adj[id] || []).forEach(function (pair) { add(pair[0]); add(at[pair[1]]); });
+    (adj[id] || []).forEach(function (pair) {
+      add(pair[0]); add(at[pair[1]]);
+      var why = WHY[pair[0].querySelector('title').textContent];
+      if (why) label(pair[0], why, pair[2]);
+    });
   }
   Object.keys(at).forEach(function (id) {
     var g = at[id], a = g.querySelector('a');
@@ -432,7 +603,7 @@ function init() {
   document.querySelectorAll('.figure').forEach(function (fig) {
     var api = setupFigure(fig);
     if (api) figures.push({ fig: fig, api: api, found: [] });
-    setupRank(fig.querySelector('.diagram'));
+    setupRank(fig.querySelector('.diagram'), api);
   });
 
   q = document.getElementById('q');
@@ -540,9 +711,10 @@ def fig(svg, wide=False, ranked=False):
     box = "diagram ranked" if ranked else "diagram"
     hint = "Drag to pan · scroll to zoom · click a node to open it"
     if ranked:
-        # Otherwise the faint half of the diagram reads as broken rather than
-        # as ranked, which is worse than not ranking it at all.
-        hint += " · the least connected are faint until you hover or zoom in"
+        # Both halves of the arrangement need saying, or a diagram with no
+        # reasons on it and half of it faint reads as broken rather than as
+        # ranked — worse than not ranking it at all.
+        hint += " · hover one for the reasons on its edges, and to bring it forward"
     # Controls sit above the box, not floating inside it, where they used to
     # cover whichever node the layout happened to put in the corner.
     return (
@@ -560,9 +732,10 @@ def fig(svg, wide=False, ranked=False):
     )
 
 
-def page(title, body, depth, index):
+def page(title, body, depth, index, why="{}"):
     up = "../" * depth
-    script = SCRIPT.replace("__INDEX__", index).replace("__UP__", up)
+    script = (SCRIPT.replace("__INDEX__", index).replace("__UP__", up)
+              .replace("__WHY__", why))
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -683,19 +856,52 @@ def render_node(nid, nodes, clusters, domains, backlinks, index):
     return page(node["title"], "\n".join(out), 1, index)
 
 
+def cluster_edges(nodes, members):
+    """Every edge the cluster's diagram draws, in reading order."""
+    return [
+        (nid, edge)
+        for nid in sorted(members, key=lambda n: nodes[n]["title"].lower())
+        for edge in nodes[nid].get("edges") or []
+        if edge.get("to") in nodes
+    ]
+
+
 def render_cluster(cluster, nodes, domains, index):
     cid, title, blurb = cluster["id"], cluster["title"], cluster["blurb"]
     dom = next(d for d in domains if d["id"] == cluster["domain"])
     members = members_of(nodes, cid)
+    # One decision, two consequences: a diagram crowded enough to want a
+    # reading order is also too crowded to carry its reasons inline.
     ranked = is_crowded(nodes, members)
     svg = render_svg(dot_source(
-        nodes, members, url=lambda n: f"../n/{n}.html", ranked=ranked))
+        nodes, members, url=lambda n: f"../n/{n}.html",
+        ranked=ranked, labels=not ranked))
     cards = "".join(
         f'<div class="card"><h4>{node_link(nid, nodes, 1)}</h4>'
         f'<p>{esc(clean(nodes[nid]["summary"], 150))}'
         f'{esc(" · " + str(nodes[nid]["year"]) if nodes[nid].get("year") else "")}</p></div>'
         for nid in sorted(members, key=lambda n: (nodes[n].get("year") or 9999, n))
     )
+    drawn = cluster_edges(nodes, members)
+    reasons = ""
+    if ranked:
+        # The diagram gives its reasons up on hover, which is no use to a
+        # reader without a pointer or without scripting, so the same text is
+        # on the page as text. Folded away: the node cards are what most
+        # people came for.
+        rows = [
+            (edge["rel"],
+             f'{node_link(src, nodes, 1)} {RELATIONS[edge["rel"]][0]} '
+             f'{node_link(edge["to"], nodes, 1)}',
+             edge.get("why"))
+            for src, edge in drawn
+        ]
+        reasons = (
+            f'<details class="reasons"><summary>The {len(rows)} reasons on '
+            f"these edges, as text</summary>"
+            f'<ul class="edges">{edge_items(rows)}</ul></details>'
+        )
+
     body = (
         f'<p class="meta"><a href="../index.html#{esc(dom["id"])}">'
         f'{esc(dom["title"])}</a></p>'
@@ -703,9 +909,15 @@ def render_cluster(cluster, nodes, domains, index):
         f'<p class="lede">{esc(blurb)}</p>'
         f"{legend()}"
         f"{fig(svg, wide=True, ranked=ranked)}"
+        f"{reasons}"
         f'<h2>{len(members)} nodes</h2><div class="cards">{cards}</div>'
     )
-    return page(title, body, 1, index)
+    why = json.dumps(
+        {f'{src}->{edge["to"]}': clean(edge["why"]) for src, edge in drawn
+         if edge.get("why")},
+        separators=(",", ":"),
+    ) if ranked else "{}"
+    return page(title, body, 1, index, why)
 
 
 def render_index(nodes, clusters, domains, index):

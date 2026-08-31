@@ -225,7 +225,8 @@ def dot_label(text, width):
     return "\\n".join(textwrap.wrap(body, width)) or body
 
 
-def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False):
+def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False,
+               labels=True):
     """Graphviz DOT for `members` plus any nodes they link to.
 
     No colours are emitted. Every node and edge carries a class instead, so the
@@ -239,6 +240,10 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False)
     wants one is the caller's call — see is_crowded. A focused neighbourhood
     never asks for it: everything drawn there is a neighbour of the node being
     read, so nothing in it is peripheral.
+    `labels` writes the reason onto each edge. Dropping it is what makes a
+    crowded diagram fit: the reasons are around half the area graphviz has to
+    lay out, and at that size they are a texture rather than something anyone
+    reads. The site puts them back on hover, one node's worth at a time.
     """
     members = set(members)
     edges, external = [], set()
@@ -255,8 +260,7 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False)
             edges.append((nid, edge, to))
 
     # An edge is only as prominent as its fainter end, so a peripheral node
-    # takes the reason written on its edge down with it. That is most of the
-    # gain: edge labels are about half the ink in a crowded diagram.
+    # takes its edges down with it.
     tiers = prominence(nodes) if ranked else None
 
     out = [
@@ -289,7 +293,7 @@ def dot_source(nodes, members, url=None, focus=None, rankdir="LR", ranked=False)
     for src, edge, dst in edges:
         rank = f" p{min(tiers[src], tiers[dst])}" if tiers else ""
         attrs = [f'class="e e-{edge["rel"]}{rank}"']
-        if edge.get("why"):
+        if labels and edge.get("why"):
             attrs.append(f'label="{dot_label(edge["why"], 26)}"')
         out.append(f'  "{src}" -> "{dst}" [{", ".join(attrs)}];')
 
