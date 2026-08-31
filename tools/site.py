@@ -576,9 +576,31 @@ function highlight(term) {
   });
 }
 
+/* How well a node answers the term, lowest first: 0 it is called that, 1 that
+   is one of the words it is called, 2 the letters appear inside one of them,
+   3 only its cluster matched. Names are ranked one at a time and the best
+   taken, so a node is never beaten by a longer name that happens to contain
+   the same words.
+
+   Without this, searching "reinforce" is answered by all thirty-odd nodes
+   filed under the reinforcement cluster and never by REINFORCE itself, which
+   is alphabetically too late to survive the cut. */
+function rank(n, term) {
+  var best = 3;
+  n.names.forEach(function (name) {
+    var at = name.indexOf(term);
+    if (at < 0) return;
+    var r = at === 0 ? 0 : (' -'.indexOf(name.charAt(at - 1)) < 0 ? 2 : 1);
+    if (r < best) best = r;
+  });
+  return best;
+}
+
 function render(term) {
   shown = term
-    ? IDX.filter(function (n) { return n.hay.indexOf(term) >= 0; }).slice(0, 12)
+    ? IDX.filter(function (n) { return n.hay.indexOf(term) >= 0; })
+         .sort(function (a, b) { return rank(a, term) - rank(b, term); })
+         .slice(0, 12)
     : [];
   sel = -1;
   if (!term) { list.className = ''; list.innerHTML = ''; return; }
@@ -597,7 +619,12 @@ function go(i) {
 
 function init() {
   IDX.forEach(function (n) {
-    n.hay = (n[0] + ' ' + n[1] + ' ' + n[2] + ' ' + (n[3] || '')).toLowerCase();
+    /* Every name this node goes by, kept apart for rank(). The id appears
+       twice, as written and with its hyphens opened out, so that
+       "deep-q-network" and "deep q network" both find it. */
+    n.names = [n[0], n[0].replace(/-/g, ' '), n[1], n[3] || ''].map(
+      function (s) { return s.toLowerCase(); });
+    n.hay = n.names.join(' ') + ' ' + n[2];
   });
 
   document.querySelectorAll('.figure').forEach(function (fig) {
