@@ -1,0 +1,21 @@
+title: Offline RL
+cluster: reinforcement
+year: 2020
+aka: [Batch RL]
+summary: >
+  Learn from a fixed dataset with no further interaction, which is the
+  setting wherever a mistake is too expensive to make on purpose: driving,
+  treatment, a live recommender. Its promise over copying the data is stitching:
+  good fragments of separate mediocre episodes joined into one policy.
+refs:
+  - title: "Offline Reinforcement Learning: Tutorial, Review, and Perspectives on Open Problems"
+    authors: Levine, Kumar, Tucker, Fu
+    year: 2020
+    url: https://arxiv.org/abs/2005.01643
+edges:
+  - rel: alternative-to
+    to: behavior-cloning
+    why: stitches better trajectories out of mediocre ones instead of copying them
+  - rel: requires
+    to: experience-replay
+    why: the buffer is the whole world, and nothing is ever added to it

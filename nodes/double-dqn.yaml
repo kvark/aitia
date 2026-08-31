@@ -1,0 +1,20 @@
+title: Double DQN
+cluster: reinforcement
+year: 2015
+aka: [Double Q-learning, DDQN]
+summary: >
+  Choose the next action with the online network, score it with the target
+  copy. Two estimators disagree about which action noise flattered, so the
+  optimism the single max was compounding largely cancels.
+refs:
+  - title: Deep Reinforcement Learning with Double Q-learning
+    authors: van Hasselt, Guez, Silver
+    year: 2015
+    url: https://arxiv.org/abs/1509.06461
+edges:
+  - rel: corrects
+    to: deep-q-network
+    why: one network both picks the next action and rates it, so noise reads as value
+  - rel: requires
+    to: target-network
+    why: the independent second estimator is the frozen copy already kept

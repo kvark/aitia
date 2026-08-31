@@ -1,0 +1,12 @@
+title: Bellman Equation
+cluster: reinforcement
+year: 1957
+summary: >
+  The value of a state is the reward collected now plus the discounted
+  value of wherever the next step lands. Everything else here is a way of solving
+  that recursion without being handed the transition probabilities it is
+  written in terms of.
+wikipedia: https://en.wikipedia.org/wiki/Bellman_equation
+edges:
+  - rel: part-of
+    to: markov-decision-process

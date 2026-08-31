@@ -1,0 +1,18 @@
+title: Distributional Reinforcement Learning
+cluster: reinforcement
+year: 2017
+aka: [C51, Categorical DQN]
+summary: >
+  Predicts the whole distribution of returns as a histogram over fixed
+  atoms, and applies the Bellman backup to that. Actions are still chosen
+  by its mean, so the gain is not risk sensitivity: the richer target is
+  simply easier for a network to fit.
+refs:
+  - title: A Distributional Perspective on Reinforcement Learning
+    authors: Bellemare, Dabney, Munos
+    year: 2017
+    url: https://arxiv.org/abs/1707.06887
+edges:
+  - rel: extends
+    to: q-learning
+    why: an expectation discards the shape of the returns that produced it

@@ -1,0 +1,18 @@
+title: Multi-Armed Bandit
+cluster: reinforcement
+aka: [Bandit problem]
+summary: >
+  One state, several arms, unknown payoffs. Strip an MDP of everything
+  except the choice between gathering information and cashing it in, and
+  this is what is left, which is why regret can be bounded here and almost
+  nowhere above it.
+wikipedia: https://en.wikipedia.org/wiki/Multi-armed_bandit
+refs:
+  - title: "Reinforcement Learning: An Introduction"
+    authors: Sutton, Barto
+    year: 2018
+    url: http://incompleteideas.net/book/the-book-2nd.html
+edges:
+  - rel: specializes
+    to: markov-decision-process
+    why: a single state, so no action changes what is faced next

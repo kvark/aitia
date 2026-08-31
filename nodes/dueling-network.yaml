@@ -1,0 +1,16 @@
+title: Dueling Network
+cluster: reinforcement
+year: 2016
+summary: >
+  Splits the head into a state-value stream and a per-action advantage
+  stream, then adds them back. How good a state is gets learned once
+  instead of separately inside every action's estimate.
+refs:
+  - title: Dueling Network Architectures for Deep Reinforcement Learning
+    authors: Wang, Schaul, Hessel, van Hasselt, Lanctot, de Freitas
+    year: 2016
+    url: https://arxiv.org/abs/1511.06581
+edges:
+  - rel: corrects
+    to: deep-q-network
+    why: in most states the action barely matters, yet each is estimated alone

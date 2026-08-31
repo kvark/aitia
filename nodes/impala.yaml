@@ -1,0 +1,21 @@
+title: IMPALA
+cluster: reinforcement
+year: 2018
+aka: [Importance Weighted Actor-Learner Architecture, V-trace]
+summary: >
+  Actors ship trajectories to a central learner instead of gradients, so
+  they never wait on a parameter sync, and V-trace corrects for how far
+  the policy has moved by the time a batch is used. The shape distributed
+  RL settled into.
+refs:
+  - title: "IMPALA: Scalable Distributed Deep-RL with Importance Weighted Actor-Learner Architectures"
+    authors: Espeholt et al.
+    year: 2018
+    url: https://arxiv.org/abs/1802.01561
+edges:
+  - rel: corrects
+    to: a3c
+    why: an actor that computes gradients stalls at every parameter sync
+  - rel: requires
+    to: importance-sampling
+    why: the trajectory is off-policy by the time the learner gets to it

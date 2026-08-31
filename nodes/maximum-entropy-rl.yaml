@@ -1,0 +1,20 @@
+title: Maximum Entropy RL
+cluster: reinforcement
+year: 2017
+summary: >
+  Add the policy's entropy to the objective, so it is paid to stay as
+  random as the returns allow. Exploration stops being a schedule bolted
+  on the outside and becomes part of what is optimised.
+refs:
+  - title: Reinforcement Learning with Deep Energy-Based Policies
+    authors: Haarnoja, Tang, Abbeel, Levine
+    year: 2017
+    url: https://arxiv.org/abs/1702.08165
+  - title: Maximum Entropy Inverse Reinforcement Learning
+    authors: Ziebart, Maas, Bagnell, Dey
+    year: 2008
+    url: https://cdn.aaai.org/AAAI/2008/AAAI08-227.pdf
+edges:
+  - rel: extends
+    to: markov-decision-process
+    why: reward alone commits to one of several equally good actions and stops looking

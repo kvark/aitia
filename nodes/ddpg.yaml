@@ -1,0 +1,28 @@
+title: Deep Deterministic Policy Gradient
+cluster: reinforcement
+year: 2015
+aka: [DDPG]
+summary: >
+  Trains a deterministic actor by climbing the critic's gradient with
+  respect to the action, which is what stands in for the max DQN cannot
+  take over a continuous action space. Explores by adding noise to the
+  actor's output, and is notoriously touchy about how much.
+refs:
+  - title: Continuous control with deep reinforcement learning
+    authors: Lillicrap et al.
+    year: 2015
+    url: https://arxiv.org/abs/1509.02971
+  - title: Deterministic Policy Gradient Algorithms
+    authors: Silver, Lever, Heess, Degris, Wierstra, Riedmiller
+    year: 2014
+    url: https://proceedings.mlr.press/v32/silver14.html
+edges:
+  - rel: corrects
+    to: deep-q-network
+    why: the max over actions has no closed form once an action is a vector
+  - rel: specializes
+    to: actor-critic
+    why: a deterministic actor, so the critic differentiates straight into it
+  - rel: requires
+    to: target-network
+    why: the same bootstrap divergence, now in the actor as well

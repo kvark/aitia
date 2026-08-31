@@ -1,0 +1,22 @@
+title: SARSA
+cluster: reinforcement
+year: 1994
+aka: [State-Action-Reward-State-Action]
+summary: >
+  Q-learning's update with one substitution: the target uses the action the
+  policy actually took, not the best one on offer. So the values include
+  the cost of exploring, and the agent walks the safe path along a cliff
+  where Q-learning walks the edge and occasionally falls off.
+wikipedia: https://en.wikipedia.org/wiki/State%E2%80%93action%E2%80%93reward%E2%80%93state%E2%80%93action
+refs:
+  - title: On-line Q-learning using connectionist systems
+    authors: Rummery, Niranjan
+    year: 1994
+    url: http://mi.eng.cam.ac.uk/reports/svr-ftp/auto-pdf/rummery_tr166.pdf
+edges:
+  - rel: specializes
+    to: temporal-difference-learning
+    why: the bootstrapped target is the action the behaviour policy chose
+  - rel: alternative-to
+    to: q-learning
+    why: on-policy, so the risk of its own exploration is priced into the values

@@ -1,0 +1,16 @@
+title: Target Network
+cluster: reinforcement
+year: 2015
+summary: >
+  Compute the bootstrap target from a frozen copy of the Q-network,
+  refreshed every few thousand steps. Two lines of code, and the
+  difference between DQN converging and DQN diverging.
+refs:
+  - title: Human-level control through deep reinforcement learning
+    authors: Mnih et al.
+    year: 2015
+    url: https://www.nature.com/articles/nature14236
+edges:
+  - rel: corrects
+    to: deep-q-network
+    why: a target computed from the weights being updated moves with every step

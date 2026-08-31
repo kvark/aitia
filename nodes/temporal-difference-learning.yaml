@@ -9,3 +9,6 @@ edges:
   - rel: specializes
     to: markov-decision-process
     why: estimates the value function the MDP defines
+  - rel: approximates
+    to: bellman-equation
+    why: samples one transition where the equation averages over every next state

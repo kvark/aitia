@@ -1,0 +1,21 @@
+title: Asynchronous Advantage Actor-Critic
+cluster: reinforcement
+year: 2016
+aka: [A3C, A2C]
+summary: >
+  Runs many actors on their own copy of the environment and applies their
+  gradients to one shared set of weights; A2C is the same idea with the
+  actors stepped in lockstep. Cheap enough to train on CPUs, and the reason
+  on-policy methods no longer needed a replay buffer.
+refs:
+  - title: Asynchronous Methods for Deep Reinforcement Learning
+    authors: Mnih et al.
+    year: 2016
+    url: https://arxiv.org/abs/1602.01783
+edges:
+  - rel: specializes
+    to: actor-critic
+    why: one actor and critic, updated from many environments at once
+  - rel: alternative-to
+    to: experience-replay
+    why: parallel environments decorrelate the updates instead of a buffer
