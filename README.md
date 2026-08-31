@@ -91,6 +91,17 @@ depends on — with the second relation in each family drawn dashed. Eight hues
 would have been simpler, but eight cannot be told apart reliably under colour
 vision deficiency, and four plus a line pattern can.
 
+A cluster past a dozen nodes is also ranked before it is drawn. Nodes are
+weighted by how connected they are — twice the edges pointing at a node, plus
+the edges it declares — and the least connected recede, taking the reasons on
+their edges with them, so there is somewhere to start looking. It is a reading
+order and not a filter: hovering a node restores it and its neighbours, and the
+ranking lifts altogether once you zoom past the diagram's natural size, which is
+also where the edge labels become readable. In-degree alone would have been the
+obvious weight and is the wrong one — edges are declared on the subject node, so
+the newest idea in any area starts at zero, and fading the frontier first is
+exactly backwards.
+
 Layout is done by graphviz at build time and the result is inlined as SVG, so a
 page carries no diagramming library: it renders before any script runs, and the
 node links are real anchors that work with scripting off. Search (<kbd>/</kbd>)
