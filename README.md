@@ -91,16 +91,22 @@ depends on — with the second relation in each family drawn dashed. Eight hues
 would have been simpler, but eight cannot be told apart reliably under colour
 vision deficiency, and four plus a line pattern can.
 
-A cluster past a dozen nodes is also ranked before it is drawn. Nodes are
-weighted by how connected they are — twice the edges pointing at a node, plus
-the edges it declares — and the least connected recede, taking the reasons on
-their edges with them, so there is somewhere to start looking. It is a reading
-order and not a filter: hovering a node restores it and its neighbours, and the
-ranking lifts altogether once you zoom past the diagram's natural size, which is
-also where the edge labels become readable. In-degree alone would have been the
-obvious weight and is the wrong one — edges are declared on the subject node, so
-the newest idea in any area starts at zero, and fading the frontier first is
-exactly backwards.
+A cluster past a dozen nodes is drawn as a map rather than as a document. The
+reasons come off the edges, which is around half of everything graphviz has to
+find room for, and hovering a node writes them back along its own edges, at a
+size you can read — a reason nobody can read at diagram scale is a texture, not
+a sentence. The same threshold ranks the nodes by how connected each one is —
+twice the edges pointing at it, plus the edges it declares — so the junctions
+come forward and the twigs recede, and there is somewhere to start looking.
+
+Nothing is hidden by either. Hovering restores a node, its edges and their far
+ends; the ranking lifts wholesale once the diagram is drawn at its natural size
+or larger, so one that fits your window is never ranked at all; and every reason
+in the cluster is also on the page as text, under the diagram, for a reader with
+no pointer or no scripting. In-degree alone would have been the obvious weight
+and is the wrong one — edges are declared on the subject node, so the newest
+idea in any area starts at zero, and fading the frontier first is exactly
+backwards.
 
 Layout is done by graphviz at build time and the result is inlined as SVG, so a
 page carries no diagramming library: it renders before any script runs, and the
